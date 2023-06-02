@@ -1,0 +1,1 @@
+This is an Android App that I developed for one of my coursework. The app is about showing different meal plans based on the input. Users can search for meals by the meal name and ingredients. Also, users can save meals in the database (SQLite). The app use TheMealDB web service.
