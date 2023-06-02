@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/pexels_monica_turlui_7218637"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/addToDB"
+        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:backgroundTint="@color/btn"
+        android:text="@string/add_meals_to_db"
+        android:layout_marginTop="200dp"
+        android:layout_gravity="center"/>
+
+    <Button
+        android:id="@+id/searchByIngredient"
+        android:layout_height="60dp"
+        android:layout_width="330dp"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:backgroundTint="@color/btn"
+        android:text="@string/search_for_meals_by_ingredient"
+        android:layout_marginTop="50dp"
+        android:layout_gravity="center"/>
+
+    <Button
+        android:id="@+id/searchForMeals"
+        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        android:text="@string/search_for_meals"
+        android:textColor="@color/black"
+        android:backgroundTint="@color/btn"
+        android:layout_marginTop="50dp"
+        android:layout_gravity="center"/>
+
+</LinearLayout>
