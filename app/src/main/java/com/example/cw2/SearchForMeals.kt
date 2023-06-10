@@ -1,10 +1,16 @@
 package com.example.cw2
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.text.InputType
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.textfield.TextInputEditText
 import com.squareup.picasso.Picasso
@@ -32,15 +38,18 @@ class SearchForMeals : AppCompatActivity() {
     private var allMeal : ArrayList<Meal> = arrayListOf()
     private var ingredients : ArrayList<Ingredients> = arrayListOf()
     private var measurements : ArrayList<Measurements> = arrayListOf()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var mealPlanAdapter: MealPlanAdapter
+    private var mealPlans : ArrayList<MealPlan> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_for_meals)
 
-        output = findViewById(R.id.mealDetails)
         scrollView = findViewById(R.id.scrollView)
         searchTxt = findViewById(R.id.searchField)
-        image = findViewById(R.id.image)
+        recyclerView = findViewById(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
         val search = findViewById<Button>(R.id.search)
         val searchWeb = findViewById<Button>(R.id.searchFromWeb)
@@ -57,6 +66,10 @@ class SearchForMeals : AppCompatActivity() {
 
     // when user click on the search button run this function
     private fun search() {
+        mealPlans.clear()
+        allMeal.clear()
+        ingredients.clear()
+        measurements.clear()
         val txt = searchTxt.text.toString()  // convert to a string
         // check empty or not
         if (txt.isNotEmpty()) {
@@ -88,13 +101,12 @@ class SearchForMeals : AppCompatActivity() {
                 }
             }
             // if there is at least one meal, show the details of the meal
-            if (allMealsDetails.isNotEmpty()) {
+            if (mealsByNames.isNotEmpty()) {
                 scrollView.setBackgroundColor(resources.getColor(R.color.white))  // set background colour
-                output.text = allMealsDetails
-                allMealsDetails.clear()
+                mealPlanAdapter = MealPlanAdapter(mealPlans)
+                recyclerView.adapter = mealPlanAdapter
                 mealsByNames.clear()
             }
-
         }
         // if user click search button without typing anything, show this msg
         else {
@@ -122,17 +134,18 @@ class SearchForMeals : AppCompatActivity() {
                         val me = measurementsDao.getMeasurementsDetails(mealsByNames[i])
 
                         allMealsDetails.append("Meal : ${m[0].mealName} \n")
-                        allMealsDetails.append("DrinkAlternate : ${m[0].drink} \n")
+                        if (m[0].drink != "" && m[0].drink != "null"){
+                            allMealsDetails.append("DrinkAlternate : ${m[0].drink} \n")
+                        }
                         allMealsDetails.append("Category : ${m[0].category} \n")
                         allMealsDetails.append("Area : ${m[0].area} \n")
                         allMealsDetails.append("Instructions : ${m[0].instructions} \n")
                         allMealsDetails.append("MealThumb : ${m[0].mealThumb} \n")
-                        allMealsDetails.append("Tags : ${m[0].tags} \n")
-                        allMealsDetails.append("Youtube : ${m[0].youtube} \n")
-
-                        // load the image url and display it
-                        runOnUiThread {
-                            Picasso.get().load(m[0].mealThumb).into(image)
+                        if (m[0].tags != "" && m[0].tags != "null"){
+                            allMealsDetails.append("Tags : ${m[0].tags} \n")
+                        }
+                        if (m[0].youtube != "" && m[0].youtube != "null"){
+                            allMealsDetails.append("Youtube : ${m[0].youtube} \n")
                         }
 
                         val split = ing.split(",")
@@ -157,10 +170,18 @@ class SearchForMeals : AppCompatActivity() {
                             }
                         }
 
-                        allMealsDetails.append("Source : ${m[0].source} \n")
-                        allMealsDetails.append("ImageSource : ${m[0].imgSource} \n")
-                        allMealsDetails.append("CreativeCommonsConfirmed : ${m[0].CreativeCommonsConfirmed} \n")
-                        allMealsDetails.append("dateModified : ${m[0].dateModified} \n")
+                        if (m[0].source != "" && m[0].source != "null") {
+                            allMealsDetails.append("Source : ${m[0].source} \n")
+                        }
+                        if (m[0].imgSource != "" && m[0].imgSource != "null") {
+                            allMealsDetails.append("ImageSource : ${m[0].imgSource} \n")
+                        }
+                        if (m[0].CreativeCommonsConfirmed != "" && m[0].CreativeCommonsConfirmed != "null") {
+                            allMealsDetails.append("CreativeCommonsConfirmed : ${m[0].CreativeCommonsConfirmed} \n")
+                        }
+                        if (m[0].dateModified != "" && m[0].dateModified != "null") {
+                            allMealsDetails.append("dateModified : ${m[0].dateModified} \n")
+                        }
                         allMealsDetails.append("-----------------------------------------------------------\n\n")
 
                         // create objects for Meal, Ingredient, Measure and add them to a list
@@ -171,6 +192,9 @@ class SearchForMeals : AppCompatActivity() {
                         val measure = Measurements(m[0].mealName,split1.toString())
                         measurements.add(measure)
 
+                        val mealItem = MealPlan(m[0].mealThumb.toString(),allMealsDetails.toString())
+                        mealPlans.add(mealItem)
+                        allMealsDetails.clear()
                     }
 
                 }
@@ -182,7 +206,6 @@ class SearchForMeals : AppCompatActivity() {
 
     // method to run if user clicks on receive from web service button
     private fun searchFromWebService(){
-
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Search Meals from Web Service")
         builder.setMessage("Enter Meal Name")
@@ -197,10 +220,15 @@ class SearchForMeals : AppCompatActivity() {
                 val toast = Toast.makeText(applicationContext, "Type Meal Name", Toast.LENGTH_LONG)
                 toast.show()
             } else {                // if input is not empty
+                mealPlans.clear()
+                allMeal.clear()
+                ingredients.clear()
+                measurements.clear()
                 getFullDetails(txt)
                 scrollView.setBackgroundColor(resources.getColor(R.color.white))
-                output.text = allMealsDetails
-                allMealsDetails.clear()
+                mealPlanAdapter = MealPlanAdapter(mealPlans)
+                recyclerView.adapter = mealPlanAdapter
+
             }
 
         }
@@ -258,11 +286,6 @@ class SearchForMeals : AppCompatActivity() {
             val ingredientsList = arrayListOf<String>()
             val measurementsList = arrayListOf<String>()
 
-            // load the image url and display it
-            runOnUiThread {
-                Picasso.get().load(mealThumb).into(image)
-            }
-
             // get ingredients and if the value is not empty and null then add to the arraylist
             for (i in 1..20){
                 val ingredient = meal.getString("strIngredient$i")
@@ -283,24 +306,37 @@ class SearchForMeals : AppCompatActivity() {
 
             // append meal details to a string builder
             allMealsDetails.append("Meal : $mealName \n")
-            allMealsDetails.append("DrinkAlternate : $drink \n")
+            if (drink != "" && drink != "null"){
+                allMealsDetails.append("DrinkAlternate : $drink \n")
+            }
             allMealsDetails.append("Category : $category \n")
             allMealsDetails.append("Area : $area \n")
             allMealsDetails.append("Instructions : $instruction \n")
             allMealsDetails.append("MealThumb : $mealThumb \n")
-            allMealsDetails.append("Tags : $tags \n")
-            allMealsDetails.append("Youtube : $youtube \n")
-
+            if (tags != "" && tags != "null") {
+                allMealsDetails.append("Tags : $tags \n")
+            }
+            if (youtube != "" && youtube != "null") {
+                allMealsDetails.append("Youtube : $youtube \n")
+            }
             for (i in 0..ingredientsList.size-1){
                 allMealsDetails.append("Ingredient"+(i+1)+":" + ingredientsList[i] + "\n")
             }
             for (i in 0..measurementsList.size-1){
                 allMealsDetails.append("Measure"+(i+1)+":" + measurementsList[i] + "\n")
             }
-            allMealsDetails.append("Source : $source \n")
-            allMealsDetails.append("ImageSource : $imgSource \n")
-            allMealsDetails.append("CreativeCommonsConfirmed : $creativeCommons \n")
-            allMealsDetails.append("dateModified : $dateModified \n")
+            if (source != "" && source != "null") {
+                allMealsDetails.append("Source : $source \n")
+            }
+            if (imgSource != "" && imgSource != "null") {
+                allMealsDetails.append("ImageSource : $imgSource \n")
+            }
+            if (creativeCommons != "" && creativeCommons != "null") {
+                allMealsDetails.append("CreativeCommonsConfirmed : $creativeCommons \n")
+            }
+            if (dateModified != "" && dateModified != "null") {
+                allMealsDetails.append("dateModified : $dateModified \n")
+            }
             allMealsDetails.append("-----------------------------------------------------------\n\n")
 
             // create objects for Meal, Ingredient, Measure and add them to a list
@@ -311,6 +347,9 @@ class SearchForMeals : AppCompatActivity() {
             val measure = Measurements(mealName,measurementsList.toString())
             measurements.add(measure)
 
+            val mealItem = MealPlan(mealThumb.toString(),allMealsDetails.toString())
+            mealPlans.add(mealItem)
+            allMealsDetails.clear()
         }
 
     }
@@ -321,7 +360,6 @@ class SearchForMeals : AppCompatActivity() {
         outState.putSerializable("MealList",allMeal)
         outState.putSerializable("ingList",ingredients)
         outState.putSerializable("measureList",measurements)
-
     }
 
     // using onRestoreInstanceState to restore the state of the app
@@ -332,18 +370,19 @@ class SearchForMeals : AppCompatActivity() {
         measurements = savedInstanceState.getSerializable("measureList") as ArrayList<Measurements>
 
         for (i in 0 until allMeal.size){
-
             allMealsDetails.append("Meal : ${allMeal[i].mealName} \n")
-            allMealsDetails.append("DrinkAlternate : ${allMeal[i].drink} \n")
+            if (allMeal[i].drink != "" && allMeal[i].drink != "null"){
+                allMealsDetails.append("DrinkAlternate : ${allMeal[i].drink} \n")
+            }
             allMealsDetails.append("Category : ${allMeal[i].category} \n")
             allMealsDetails.append("Area : ${allMeal[i].area} \n")
             allMealsDetails.append("Instructions : ${allMeal[i].instructions} \n")
             allMealsDetails.append("MealThumb : ${allMeal[i].mealThumb} \n")
-            allMealsDetails.append("Tags : ${allMeal[i].tags} \n")
-            allMealsDetails.append("Youtube : ${allMeal[i].youtube} \n")
-
-            runOnUiThread {
-                Picasso.get().load(allMeal[i].mealThumb).into(image)
+            if (allMeal[i].tags != "" && allMeal[i].tags != "null"){
+                allMealsDetails.append("Tags : ${allMeal[i].tags} \n")
+            }
+            if (allMeal[i].youtube != "" && allMeal[i].youtube != "null"){
+                allMealsDetails.append("Youtube : ${allMeal[i].youtube} \n")
             }
 
             val split = ingredients[i].ingredients.split(",")
@@ -385,22 +424,72 @@ class SearchForMeals : AppCompatActivity() {
                 }
             }
 
-            allMealsDetails.append("Source : ${allMeal[i].source} \n")
-            allMealsDetails.append("ImageSource : ${allMeal[i].imgSource} \n")
-            allMealsDetails.append("CreativeCommonsConfirmed : ${allMeal[i].CreativeCommonsConfirmed} \n")
-            allMealsDetails.append("dateModified : ${allMeal[i].dateModified} \n")
+            if (allMeal[i].source != "" && allMeal[i].source != "null") {
+                allMealsDetails.append("Source : ${allMeal[i].source} \n")
+            }
+            if (allMeal[i].imgSource != "" && allMeal[i].imgSource != "null") {
+                allMealsDetails.append("ImageSource : ${allMeal[i].imgSource} \n")
+            }
+            if (allMeal[i].CreativeCommonsConfirmed != "" && allMeal[i].CreativeCommonsConfirmed != "null") {
+                allMealsDetails.append("CreativeCommonsConfirmed : ${allMeal[i].CreativeCommonsConfirmed} \n")
+            }
+            if (allMeal[i].dateModified != "" && allMeal[i].dateModified != "null") {
+                allMealsDetails.append("dateModified : ${allMeal[i].dateModified} \n")
+            }
             allMealsDetails.append("-----------------------------------------------------------\n\n")
+
+            val mealItem = MealPlan(allMeal[i].mealThumb.toString(),allMealsDetails.toString())
+            mealPlans.add(mealItem)
+            allMealsDetails.clear()
         }
 
-        if (allMealsDetails.isNotEmpty()) {
-            scrollView.setBackgroundColor(resources.getColor(R.color.white))
-            output.text = allMealsDetails
-            allMealsDetails.clear()
+        if (mealPlans.isNotEmpty()) {
+            scrollView.setBackgroundColor(resources.getColor(R.color.white))  // set background colour
+            mealPlanAdapter = MealPlanAdapter(mealPlans)
+            recyclerView.adapter = mealPlanAdapter
+
+        }
+
+    }
+
+    private inner class MealPlanAdapter(private val mealPlans: List<MealPlan>) :
+        RecyclerView.Adapter<MealPlanAdapter.MealPlanViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MealPlanViewHolder {
+            val itemView = LayoutInflater.from(parent.context)
+                .inflate(R.layout.meal_item, parent, false)
+            return MealPlanViewHolder(itemView)
+        }
+
+        override fun onBindViewHolder(holder: MealPlanViewHolder, position: Int) {
+            val mealPlan = mealPlans[position]
+            holder.bind(mealPlan)
+        }
+
+        override fun getItemCount(): Int {
+            return mealPlans.size
+        }
+
+        private inner class MealPlanViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val imageView: ImageView = itemView.findViewById(R.id.imageView)
+            private val textViewMealDetails: TextView =
+                itemView.findViewById(R.id.textViewMealDetails)
+
+            fun bind(mealPlan: MealPlan) {
+                // Set meal details
+                textViewMealDetails.text = mealPlan.mealDetails
+
+                // Load image from URL using Picasso
+                Picasso.get().load(mealPlan.imageUrl).into(imageView)
+            }
         }
 
     }
 
 }
+
+
+
 
 /*
 References

@@ -6,7 +6,7 @@
     <string name="retrieve_meals">Retrieve Meals</string>
     <string name="ingredient">Ingredient</string>
     <string name="save_meals_to_database">Save meals to Database</string>
-    <string name="ingredient_meal_name">ingredient / Meal Name</string>
+    <string name="ingredient_meal_name">Ingredient / Meal Name</string>
     <string name="search">Search</string>
     <string name="search_from_web_service">Search From Web Service</string>
 </resources>
