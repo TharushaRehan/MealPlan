@@ -7,5 +7,7 @@ Functionalities
 4. Search Meals by the meal name and ingredients from the database.
 
 Screenshots
+
 ![imgonline-com-ua-twotoone-og5ZGXL1ESiGy2s](https://github.com/TharushaRehan/MealPlan/assets/101706353/b7063d62-77df-4cf5-8fef-f62cf6539159)
 
+![imgonline-com-ua-twotoone-zTBVdCD2soH](https://github.com/TharushaRehan/MealPlan/assets/101706353/9641a72f-22e3-414d-bee5-208d759b96a7)
